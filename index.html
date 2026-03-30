@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REPLACED</title>
+    <link rel="icon" href="assets/ai_wojak_1.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: "MS Sans Serif", "Tahoma", sans-serif;
+        }
+
+        /* --- ЭФФЕКТ ЯРОСТИ --- */
+        #rage-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0;
+            box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.8), 
+                        inset 0 0 200px rgba(255, 0, 0, 0.4);
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        #rage-overlay.active {
+            opacity: 1;
+            animation: rage-pulse 0.5s infinite alternate;
+        }
+
+        @keyframes rage-pulse {
+            from { filter: saturate(1.5); box-shadow: inset 0 0 80px rgba(255, 0, 0, 0.8); }
+            to { filter: saturate(4) contrast(1.2); box-shadow: inset 0 0 150px rgba(255, 0, 0, 1); }
+        }
+
+        /* --- ВЕРХНЯЯ ПАНЕЛЬ --- */
+        .top-nav {
+            position: absolute;
+            top: 10px; left: 0;
+            width: 100%; padding: 0 20px;
+            display: flex; justify-content: space-between;
+            align-items: flex-start; z-index: 100;
+        }
+
+        .ca-container {
+            background-color: #c0c0c0;
+            border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            padding: 10px 15px;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .ca-label { font-size: 10px; font-weight: bold; color: #000080; }
+        .ca-value { font-size: 12px; color: #000; font-family: monospace; }
+
+        .right-controls { display: flex; align-items: center; gap: 15px; }
+
+        .social-icon {
+            width: 40px; height: 40px;
+            animation: icon-swing ease-in-out 2s infinite;
+        }
+
+        @keyframes icon-swing {
+            0%, 100% { transform: translateY(0) rotate(-3deg); }
+            50% { transform: translateY(-5px) rotate(3deg); }
+        }
+
+        .buy-button {
+            background-color: #c0c0c0;
+            border: 3px solid;
+            border-color: #fff #000 #000 #fff;
+            padding: 8px 25px;
+            color: #000; font-weight: bold; font-size: 18px;
+            text-transform: uppercase;
+            box-shadow: 2px 2px 0px #000;
+            text-decoration: none;
+        }
+
+        /* --- ЭФФЕКТЫ --- */
+        body.shaking { animation: shake 0.1s infinite; }
+        @keyframes shake {
+            0% { transform: translate(2px, 1px); }
+            50% { transform: translate(-3px, -2px); }
+            100% { transform: translate(1px, 2px); }
+        }
+
+        #blackout {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: black;
+            z-index: 999; display: none;
+        }
+
+        .overlay-header {
+            position: absolute;
+            top: 15%; left: 0; width: 100%;
+            display: flex; justify-content: center;
+            z-index: 5; pointer-events: none;
+        }
+
+        .swing-text {
+            color: #fff;
+            font-size: clamp(2.5rem, 7vw, 6rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            animation: swing ease-in-out 3s infinite;
+            text-shadow: 0 5px 30px rgba(0, 0, 0, 0.7);
+        }
+
+        @keyframes swing {
+            0%, 100% { transform: rotate(-4deg); }
+            50% { transform: rotate(4deg); }
+        }
+
+        .media-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        #mainVideo { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            display: block; 
+        }
+
+        /* --- ОКНА --- */
+        .win97-window {
+            position: absolute;
+            z-index: 20;
+            background-color: #c0c0c0;
+            border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+        }
+        .win97-window.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+
+        .win97-title-bar {
+            height: 18px;
+            background: linear-gradient(90deg, #000080, #1084d0);
+            display: flex; align-items: center; padding: 0 5px; margin: 2px;
+        }
+        .win97-title { color: #fff; font-weight: bold; font-size: 11px; }
+        .win97-body { padding: 10px; text-align: center; }
+
+        .pulse-btn {
+            margin-top: 10px; padding: 6px 20px;
+            background-color: #c0c0c0; border: 2px solid;
+            border-color: #fff #000 #000 #fff;
+            font-size: 12px; font-weight: bold; cursor: pointer;
+            animation: heartbeat 1.5s infinite ease-in-out;
+        }
+        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+        .img-window { width: 160px; }
+        .img-window img { width: 100%; display: block; border: 1px inset #808080; }
+        #aiMem1 { width: 220px; }
+        #aiMem2 { width: 140px; }
+        #punchWindow { width: 200px; }
+        .punch-count { font-size: 14px; font-weight: bold; color: #000080; margin-bottom: 5px; }
+        .punch-btn {
+            padding: 5px 10px; background-color: #c0c0c0; border: 2px solid;
+            border-color: #fff #000 #000 #fff; font-weight: bold; cursor: pointer;
+        }
+        .loser-text { font-size: 16px; font-weight: bold; color: #ff0000; }
+
+        /* --- АДАПТИВ ДЛЯ ТЕЛЕФОНОВ --- */
+        @media (max-width: 440px) {
+            .top-nav { padding: 5px 10px; }
+            .ca-container { padding: 5px; max-width: 140px; }
+            .ca-value { font-size: 9px; }
+            .buy-button { font-size: 14px; padding: 5px 10px; }
+
+            #firedWindow { 
+                transform: translate(-50%, -50%) scale(0.95) !important; 
+            }
+            #firedWindow.show { 
+                transform: translate(-50%, -50%) scale(0.95) !important; 
+            }
+            #firedWindow .win97-body p {
+                font-size: 16px !important;
+                line-height: 1.3;
+            }
+
+            #trollWindow {
+                margin-left: -25vw;
+                margin-top: 15vh; 
+                transform: translate(-50%, -50%) scale(0.7) !important;
+            }
+            #trollWindow.show {
+                transform: translate(-50%, -50%) scale(0.7) !important;
+            }
+
+            /* Фикс для остальных окон: чуть меньше скейл, чтобы влезли */
+            #loserWindow, #wojakWindow, #aiMem1, #aiMem2, #punchWindow {
+                transform: translate(-50%, -50%) scale(0.65) !important;
+            }
+            #loserWindow.show, #wojakWindow.show, #aiMem1.show, #aiMem2.show, #punchWindow.show {
+                transform: translate(-50%, -50%) scale(0.65) !important;
+            }
+        }
+    </style>
+</head>
+<body id="mainBody">
+
+    <div id="blackout"></div>
+    <div id="rage-overlay"></div>
+
+    <div class="top-nav">
+        <div class="ca-container">
+            <div class="ca-label">CONTRACT_ADDRESS:</div>
+            <div class="ca-value">31233123213213213123213123213</div>
+        </div>
+        <div class="right-controls">
+            <a href="#"><img src="assets/dexscreener.jpg" class="social-icon"></a>
+            <a href="#"><img src="assets/X.jpg" class="social-icon"></a>
+            <a href="#" class="buy-button">BUY</a>
+        </div>
+    </div>
+
+    <div class="overlay-header">
+        <h1 class="swing-text">$REPLACED</h1>
+    </div>
+
+    <div class="media-container">
+        <video id="mainVideo" autoplay muted loop playsinline></video>
+
+        <div class="win97-window" id="firedWindow" style="width: 300px;">
+            <div class="win97-title-bar"><div class="win97-title">HR_System_Alert</div></div>
+            <div class="win97-body">
+                <div id="initial-text">
+                    <p style="font-size: 12px; color: #000; margin-bottom: 10px;">You've been successfully fired and replaced by an AI.<br>Congratulations!</p>
+                    <button class="pulse-btn" onclick="acceptFate()">Accept Fate</button>
+                </div>
+                <div id="fired-alert" style="display:none; color: red; font-weight: bold;">You have been fired!</div>
+            </div>
+        </div>
+
+        <div class="win97-window img-window" id="trollWindow"><div class="win97-title-bar"><div class="win97-title">problem?</div></div><div class="win97-body"><img src="assets/troll-face-gif-6.gif"></div></div>
+        <div class="win97-window" id="loserWindow" style="width: 220px;"><div class="win97-title-bar"><div class="win97-title">System_Message</div></div><div class="win97-body"><p class="loser-text">Just find a job loser</p></div></div>
+        <div class="win97-window img-window" id="wojakWindow"><div class="win97-title-bar"><div class="win97-title">Reality_Check</div></div><div class="win97-body"><img src="assets/wojak-sad-in-the-rain.gif"></div></div>
+        <div class="win97-window img-window" id="aiMem1"><div class="win97-title-bar"><div class="win97-title">AI_Superiority.png</div></div><div class="win97-body"><img src="assets/ai_mems.png"></div></div>
+        <div class="win97-window img-window" id="aiMem2"><div class="win97-title-bar"><div class="win97-title">Efficiency.png</div></div><div class="win97-body"><img src="assets/ai_mems_2.png"></div></div>
+        <div class="win97-window" id="punchWindow"><div class="win97-title-bar"><div class="win97-title">PUNCH_THE_AI.exe</div></div><div class="win97-body"><div class="punch-count">REVENGE: <span id="hits">0</span></div><img src="assets/ai_wojak_1.png" id="punchWojak" style="width:100%"><button class="punch-btn" onclick="punchAI()">PUNCH AI!</button></div></div>
+    </div>
+
+    <script>
+        const video = document.getElementById('mainVideo');
+        const blackout = document.getElementById('blackout');
+        const rageOverlay = document.getElementById('rage-overlay');
+        const wojakImg = document.getElementById('punchWojak');
+        const hitsSpan = document.getElementById('hits');
+        let hitCount = 0;
+        let isActionTriggered = false;
+
+        const windows = {
+            fired: document.getElementById('firedWindow'),
+            troll: document.getElementById('trollWindow'),
+            loser: document.getElementById('loserWindow'),
+            wojak: document.getElementById('wojakWindow'),
+            mem1: document.getElementById('aiMem1'),
+            mem2: document.getElementById('aiMem2'),
+            punch: document.getElementById('punchWindow')
+        };
+
+        function setInitialVideo() {
+            if (window.innerWidth <= 440) {
+                video.src = "assets/Replaced_1st_act_phone.mp4";
+            } else {
+                video.src = "assets/Replaced_1st_act.mp4";
+            }
+            video.load();
+        }
+
+        function positionElements() {
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
+            const scale = Math.max(screenW / 1920, screenH / 1080);
+            const x = screenW / 2;
+            const y = screenH / 2;
+            const vh = screenH / 100;
+            const vw = screenW / 100;
+
+            // Базовые позиции
+            windows.fired.style.left = `${x}px`;
+            windows.fired.style.top = `${y}px`;
+            windows.troll.style.left = `${x + (220 * scale)}px`;
+            windows.troll.style.top = `${y + (100 * scale)}px`;
+
+            windows.loser.style.left = `${x + (160 * scale)}px`;
+            windows.loser.style.top = `${y - (80 * scale)}px`;
+            windows.wojak.style.left = `${x - (180 * scale)}px`;
+            windows.wojak.style.top = `${y + (60 * scale)}px`;
+            
+            // Адаптация мем-окошек
+            if (screenW <= 440) {
+                // На телефонах: разносим по высоте
+                // mem1 (AI_Superiority) - выше
+                windows.mem1.style.left = `${x - (22 * vw)}px`;
+                windows.mem1.style.top = `${y - (32 * vh)}px`; 
+                
+                // mem2 (Efficiency) - ниже
+                windows.mem2.style.left = `${x + (22 * vw)}px`;
+                windows.mem2.style.top = `${y - (18 * vh)}px`;
+                
+                windows.punch.style.left = `${x}px`;
+                windows.punch.style.top = `${y + (15 * vh)}px`;
+            } else {
+                // На десктопе (твои настройки: -17vh и +15vh)
+                windows.mem1.style.left = `${x - (250 * scale) - (17 * vh)}px`;
+                windows.mem1.style.top = `${y - (140 * scale)}px`;
+                
+                windows.mem2.style.left = `${x + (260 * scale) + (15 * vh)}px`;
+                windows.mem2.style.top = `${y + (160 * scale)}px`;
+                
+                windows.punch.style.left = `${x}px`;
+                windows.punch.style.top = `${y + (380 * scale)}px`;
+            }
+        }
+
+        window.addEventListener('resize', positionElements);
+        window.addEventListener('load', () => {
+            setInitialVideo();
+            positionElements();
+            setTimeout(() => windows.fired.classList.add('show'), 1000);
+            setTimeout(() => {
+                windows.troll.classList.add('show');
+                setTimeout(() => { if (!isActionTriggered) acceptFate(); }, 1500);
+            }, 3000);
+        });
+
+        function punchAI() {
+            hitCount++;
+            hitsSpan.innerText = hitCount;
+            wojakImg.src = "assets/ai_wojak_2.png";
+            document.body.classList.add('shaking');
+            setTimeout(() => { document.body.classList.remove('shaking'); }, 300);
+            setTimeout(() => { wojakImg.src = "assets/ai_wojak_1.png"; }, 1000);
+        }
+
+        function acceptFate() {
+            if (isActionTriggered) return;
+            isActionTriggered = true;
+            const glassSound = new Audio('assets/glass-breaking-sound-effect.mp3');
+            const shutdownSound = new Audio('assets/turning-on-the-computer-fan-noise-shutting-down.mp3');
+            
+            document.getElementById('initial-text').style.display = 'none';
+            document.getElementById('fired-alert').style.display = 'block';
+            document.body.classList.add('shaking');
+            video.pause();
+
+            setTimeout(() => {
+                glassSound.play().catch(() => {});
+                document.body.classList.remove('shaking');
+                blackout.style.display = 'block';
+                
+                setTimeout(() => {
+                    shutdownSound.play().catch(() => {});
+                    
+                    if (window.innerWidth <= 440) {
+                        video.src = "assets/Replaced_2st_act_phone.mp4";
+                    } else {
+                        video.src = "assets/Replaced_2st_act.mp4";
+                    }
+                    
+                    video.load();
+                    video.play();
+                    windows.fired.classList.remove('show');
+                    windows.troll.classList.remove('show');
+                    
+                    setTimeout(() => {
+                        blackout.style.display = 'none';
+                        startAct2();
+                        startRageCycle();
+                    }, 500);
+                }, 1500);
+            }, 1000);
+        }
+
+        function startAct2() {
+            setTimeout(() => {
+                windows.loser.classList.add('show');
+                windows.wojak.classList.add('show');
+                windows.punch.classList.add('show');
+                const randTime1 = Math.floor(Math.random() * 1000) + 1000;
+                setTimeout(() => windows.mem1.classList.add('show'), randTime1);
+                const randTime2 = Math.floor(Math.random() * 1000) + 1000;
+                setTimeout(() => windows.mem2.classList.add('show'), randTime2);
+            }, 1000);
+        }
+
+        function startRageCycle() {
+            setInterval(() => {
+                rageOverlay.classList.add('active');
+                setTimeout(() => rageOverlay.classList.remove('active'), 1500);
+            }, 6500);
+        }
+
+        document.body.addEventListener('click', () => { if (video.muted) video.muted = false; });
+    </script>
+</body>
+</html>
