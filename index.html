@@ -55,10 +55,21 @@
             border: 2px solid;
             border-color: #fff #808080 #808080 #fff;
             padding: 10px 15px;
-            display: flex; flex-direction: column; gap: 2px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            cursor: pointer;
+            transition: background 0.1s;
+            /* ФИКС ДЛЯ ДЛИННОГО ТЕКСТА */
+            word-break: break-all; 
+            max-width: 300px;
         }
-        .ca-label { font-size: 10px; font-weight: bold; color: #000080; }
-        .ca-value { font-size: 12px; color: #000; font-family: monospace; }
+        
+        .ca-container:active {
+            border-color: #808080 #fff #fff #808080;
+        }
+        .ca-label { font-size: 10px; font-weight: bold; color: #000080; pointer-events: none; }
+        .ca-value { font-size: 11px; color: #000; font-family: monospace; pointer-events: none; line-height: 1.2; }
 
         .right-controls { display: flex; align-items: center; gap: 15px; }
 
@@ -82,8 +93,8 @@
             box-shadow: 2px 2px 0px #000;
             text-decoration: none;
         }
+        .buy-button:active { border-color: #000 #fff #fff #000; box-shadow: none; transform: translate(1px, 1px); }
 
-        /* --- ЭФФЕКТЫ --- */
         body.shaking { animation: shake 0.1s infinite; }
         @keyframes shake {
             0% { transform: translate(2px, 1px); }
@@ -129,9 +140,7 @@
             display: block; 
         }
 
-        #mainImage {
-            display: none;
-        }
+        #mainImage { display: none; }
 
         .win97-window {
             position: absolute;
@@ -172,40 +181,27 @@
             padding: 5px 10px; background-color: #c0c0c0; border: 2px solid;
             border-color: #fff #000 #000 #fff; font-weight: bold; cursor: pointer;
         }
+        .punch-btn:active { border-color: #000 #fff #fff #000; }
         .loser-text { font-size: 16px; font-weight: bold; color: #ff0000; }
 
         @media (max-width: 440px) {
             .top-nav { padding: 5px 10px; }
-            .ca-container { padding: 5px; max-width: 140px; }
-            .ca-value { font-size: 9px; }
+            .ca-container { 
+                padding: 5px 8px; 
+                max-width: 160px; /* Немного расширил для мобилки */
+            }
+            .ca-value { font-size: 9px; word-break: break-all; } /* Принудительный перенос */
             .buy-button { font-size: 14px; padding: 5px 10px; }
 
-            #firedWindow { 
-                transform: translate(-50%, -50%) scale(0.95) !important; 
-            }
-            #firedWindow.show { 
-                transform: translate(-50%, -50%) scale(0.95) !important; 
-            }
-            #firedWindow .win97-body p {
-                font-size: 16px !important;
-                line-height: 1.3;
-            }
+            #firedWindow { transform: translate(-50%, -50%) scale(0.95) !important; }
+            #firedWindow.show { transform: translate(-50%, -50%) scale(0.95) !important; }
+            #firedWindow .win97-body p { font-size: 16px !important; line-height: 1.3; }
 
-            #trollWindow {
-                margin-left: -25vw;
-                margin-top: 15vh; 
-                transform: translate(-50%, -50%) scale(0.7) !important;
-            }
-            #trollWindow.show {
-                transform: translate(-50%, -50%) scale(0.7) !important;
-            }
+            #trollWindow { margin-left: -25vw; margin-top: 15vh; transform: translate(-50%, -50%) scale(0.7) !important; }
+            #trollWindow.show { transform: translate(-50%, -50%) scale(0.7) !important; }
 
-            #loserWindow, #wojakWindow, #aiMem1, #aiMem2, #punchWindow {
-                transform: translate(-50%, -50%) scale(0.65) !important;
-            }
-            #loserWindow.show, #wojakWindow.show, #aiMem1.show, #aiMem2.show, #punchWindow.show {
-                transform: translate(-50%, -50%) scale(0.65) !important;
-            }
+            #loserWindow, #wojakWindow, #aiMem1, #aiMem2, #punchWindow { transform: translate(-50%, -50%) scale(0.65) !important; }
+            #loserWindow.show, #wojakWindow.show, #aiMem1.show, #aiMem2.show, #punchWindow.show { transform: translate(-50%, -50%) scale(0.65) !important; }
         }
     </style>
 </head>
@@ -215,14 +211,14 @@
     <div id="rage-overlay"></div>
 
     <div class="top-nav">
-        <div class="ca-container">
-            <div class="ca-label">CONTRACT_ADDRESS:</div>
-            <div class="ca-value">716PpMeytUSzRU4yq31CNc7bvDVxb3Jd7QQRBMaipump</div>
+        <div class="ca-container" onclick="copyCA()">
+            <div class="ca-label" id="ca-label">CONTRACT_ADDRESS:</div>
+            <div class="ca-value" id="ca-value">716PpMeytUSzRU4yq31CNc7bvDVxb3Jd7QQRBMaipump</div>
         </div>
         <div class="right-controls">
-            <a href="https://dexscreener.com/solana/716PpMeytUSzRU4yq31CNc7bvDVxb3Jd7QQRBMaipump"><img src="assets/dexscreener.jpg" class="social-icon"></a>
-            <a href="https://x.com/i/communities/2038521987778150908"><img src="assets/X.jpg" class="social-icon"></a>
-            <a href="https://swap.pump.fun/?input=So11111111111111111111111111111111111111112&output=716PpMeytUSzRU4yq31CNc7bvDVxb3Jd7QQRBMaipump" class="buy-button">BUY</a>
+            <a href="https://dexscreener.com/solana/716PpMeytUSzRU4yq31CNc7bvDVxb3Jd7QQRBMaipump" target="_blank"><img src="assets/dexscreener.jpg" class="social-icon"></a>
+            <a href="https://x.com/i/communities/2038521987778150908" target="_blank"><img src="assets/X.jpg" class="social-icon"></a>
+            <a href="https://swap.pump.fun/?input=So11111111111111111111111111111111111111112&output=716PpMeytUSzRU4yq31CNc7bvDVxb3Jd7QQRBMaipump" target="_blank" class="buy-button">BUY</a>
         </div>
     </div>
 
@@ -273,6 +269,21 @@
             punch: document.getElementById('punchWindow')
         };
 
+        function copyCA() {
+            const caText = document.getElementById('ca-value').innerText;
+            const label = document.getElementById('ca-label');
+            
+            navigator.clipboard.writeText(caText).then(() => {
+                const originalLabel = label.innerText;
+                label.innerText = "COPIED!";
+                label.style.color = "#ff0000";
+                setTimeout(() => {
+                    label.innerText = originalLabel;
+                    label.style.color = "#000080";
+                }, 1000);
+            });
+        }
+
         function setInitialVideo() {
             if (window.innerWidth <= 440) {
                 video.style.display = 'none';
@@ -308,20 +319,15 @@
             if (screenW <= 440) {
                 windows.mem1.style.left = `${x - (22 * vw)}px`;
                 windows.mem1.style.top = `${y - (32 * vh)}px`; 
-                
                 windows.mem2.style.left = `${x + (22 * vw)}px`;
                 windows.mem2.style.top = `${y - (18 * vh)}px`;
-                
                 windows.punch.style.left = `${x}px`;
                 windows.punch.style.top = `${y + (15 * vh)}px`;
             } else {
-                // На десктопе
                 windows.mem1.style.left = `${x - (250 * scale) - (17 * vh)}px`;
                 windows.mem1.style.top = `${y - (140 * scale)}px`;
-                
                 windows.mem2.style.left = `${x + (260 * scale) + (15 * vh)}px`;
                 windows.mem2.style.top = `${y + (160 * scale)}px`;
-                
                 windows.punch.style.left = `${x}px`;
                 windows.punch.style.top = `${y + (380 * scale)}px`;
             }
@@ -365,7 +371,6 @@
                 
                 setTimeout(() => {
                     shutdownSound.play().catch(() => {});
-                    
                     if (window.innerWidth <= 440) {
                         video.style.display = 'none';
                         image.style.display = 'block';
@@ -377,10 +382,8 @@
                         video.load();
                         video.play();
                     }
-                    
                     windows.fired.classList.remove('show');
                     windows.troll.classList.remove('show');
-                    
                     setTimeout(() => {
                         blackout.style.display = 'none';
                         startAct2();
