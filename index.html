@@ -20,7 +20,6 @@
             font-family: "MS Sans Serif", "Tahoma", sans-serif;
         }
 
-        /* --- ЭФФЕКТ ЯРОСТИ --- */
         #rage-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -43,7 +42,6 @@
             to { filter: saturate(4) contrast(1.2); box-shadow: inset 0 0 150px rgba(255, 0, 0, 1); }
         }
 
-        /* --- ВЕРХНЯЯ ПАНЕЛЬ --- */
         .top-nav {
             position: absolute;
             top: 10px; left: 0;
@@ -124,14 +122,17 @@
 
         .media-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
-        #mainVideo { 
+        #mainVideo, #mainImage { 
             width: 100%; 
             height: 100%; 
             object-fit: cover; 
             display: block; 
         }
 
-        /* --- ОКНА --- */
+        #mainImage {
+            display: none;
+        }
+
         .win97-window {
             position: absolute;
             z-index: 20;
@@ -173,7 +174,6 @@
         }
         .loser-text { font-size: 16px; font-weight: bold; color: #ff0000; }
 
-        /* --- АДАПТИВ ДЛЯ ТЕЛЕФОНОВ --- */
         @media (max-width: 440px) {
             .top-nav { padding: 5px 10px; }
             .ca-container { padding: 5px; max-width: 140px; }
@@ -200,7 +200,6 @@
                 transform: translate(-50%, -50%) scale(0.7) !important;
             }
 
-            /* Фикс для остальных окон: чуть меньше скейл, чтобы влезли */
             #loserWindow, #wojakWindow, #aiMem1, #aiMem2, #punchWindow {
                 transform: translate(-50%, -50%) scale(0.65) !important;
             }
@@ -218,12 +217,12 @@
     <div class="top-nav">
         <div class="ca-container">
             <div class="ca-label">CONTRACT_ADDRESS:</div>
-            <div class="ca-value">716PpMeytUSzRU4yq31CNc7bvDVxb3Jd7QQRBMaipump</div>
+            <div class="ca-value">31233123213213213123213123213</div>
         </div>
         <div class="right-controls">
-            <a href="https://dexscreener.com/solana/716PpMeytUSzRU4yq31CNc7bvDVxb3Jd7QQRBMaipump"><img src="assets/dexscreener.jpg" class="social-icon"></a>
-            <a href="https://x.com/i/communities/2038521987778150908"><img src="assets/X.jpg" class="social-icon"></a>
-            <a href="https://swap.pump.fun/?input=So11111111111111111111111111111111111111112&output=716PpMeytUSzRU4yq31CNc7bvDVxb3Jd7QQRBMaipump" class="buy-button">BUY</a>
+            <a href="#"><img src="assets/dexscreener.jpg" class="social-icon"></a>
+            <a href="#"><img src="assets/X.jpg" class="social-icon"></a>
+            <a href="#" class="buy-button">BUY</a>
         </div>
     </div>
 
@@ -232,6 +231,7 @@
     </div>
 
     <div class="media-container">
+        <img id="mainImage">
         <video id="mainVideo" autoplay muted loop playsinline></video>
 
         <div class="win97-window" id="firedWindow" style="width: 300px;">
@@ -255,6 +255,7 @@
 
     <script>
         const video = document.getElementById('mainVideo');
+        const image = document.getElementById('mainImage');
         const blackout = document.getElementById('blackout');
         const rageOverlay = document.getElementById('rage-overlay');
         const wojakImg = document.getElementById('punchWojak');
@@ -274,11 +275,15 @@
 
         function setInitialVideo() {
             if (window.innerWidth <= 440) {
-                video.src = "assets/Replaced_1st_act_phone.mp4";
+                video.style.display = 'none';
+                image.style.display = 'block';
+                image.src = "assets/Replaced_1st_act_phone.gif";
             } else {
+                image.style.display = 'none';
+                video.style.display = 'block';
                 video.src = "assets/Replaced_1st_act.mp4";
+                video.load();
             }
-            video.load();
         }
 
         function positionElements() {
@@ -290,7 +295,6 @@
             const vh = screenH / 100;
             const vw = screenW / 100;
 
-            // Базовые позиции
             windows.fired.style.left = `${x}px`;
             windows.fired.style.top = `${y}px`;
             windows.troll.style.left = `${x + (220 * scale)}px`;
@@ -301,21 +305,17 @@
             windows.wojak.style.left = `${x - (180 * scale)}px`;
             windows.wojak.style.top = `${y + (60 * scale)}px`;
             
-            // Адаптация мем-окошек
             if (screenW <= 440) {
-                // На телефонах: разносим по высоте
-                // mem1 (AI_Superiority) - выше
                 windows.mem1.style.left = `${x - (22 * vw)}px`;
                 windows.mem1.style.top = `${y - (32 * vh)}px`; 
                 
-                // mem2 (Efficiency) - ниже
                 windows.mem2.style.left = `${x + (22 * vw)}px`;
                 windows.mem2.style.top = `${y - (18 * vh)}px`;
                 
                 windows.punch.style.left = `${x}px`;
                 windows.punch.style.top = `${y + (15 * vh)}px`;
             } else {
-                // На десктопе (твои настройки: -17vh и +15vh)
+                // На десктопе
                 windows.mem1.style.left = `${x - (250 * scale) - (17 * vh)}px`;
                 windows.mem1.style.top = `${y - (140 * scale)}px`;
                 
@@ -367,13 +367,17 @@
                     shutdownSound.play().catch(() => {});
                     
                     if (window.innerWidth <= 440) {
-                        video.src = "assets/Replaced_2st_act_phone.mp4";
+                        video.style.display = 'none';
+                        image.style.display = 'block';
+                        image.src = "assets/Replaced_2st_act_phone.gif";
                     } else {
+                        image.style.display = 'none';
+                        video.style.display = 'block';
                         video.src = "assets/Replaced_2st_act.mp4";
+                        video.load();
+                        video.play();
                     }
                     
-                    video.load();
-                    video.play();
                     windows.fired.classList.remove('show');
                     windows.troll.classList.remove('show');
                     
